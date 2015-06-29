@@ -1,0 +1,188 @@
+---
+title: "USDA"
+author: "Cynthia O'Donnell"
+date: "06/29/2015"
+output: html_document
+---
+
+# USDA Food Analysis
+
+### Load and View Data
+
+```{r}
+USDA = read.csv('USDA.csv')
+
+str(USDA)
+
+summary(USDA)
+```
+
+### Explore Variables
+
+What is the food with the maximum sodium count?
+
+```{r, echo=FALSE}
+which.max(USDA$Sodium)
+```
+
+How do we find out what food this is?
+
+```{r}
+names(USDA)
+
+USDA$Description[265]
+```
+
+Oh, it's Salt.  Well, that makes sense.
+
+```{r}
+HighSodium = subset(USDA, Sodium>10000)
+
+nrow(HighSodium)
+```
+
+There are 10 foods that are high sodium.  WHich ones are they?
+
+```{r}
+HighSodium$Description
+```
+
+I thought caviar would be high sodium.  Let's figure out where that is.
+
+```{r}
+match("CAVIAR", USDA$Description)
+USDA$Sodium[4154]
+```
+
+Actually, you can do this in one line.
+
+```{r}
+USDA$Sodium[match("CAVIAR", USDA$Description)]
+```
+
+### Explore Summary Statistics
+
+```{r}
+summary(USDA$Sodium)
+
+sd(USDA$Sodium)
+```
+
+NA?  Let's fix that!
+
+```{r}
+sd(USDA$Sodium, na.rm=TRUE)
+```
+
+Now we know that the mean sodium level of all foods in this dataset is 322.1 and the standard deviation is 1045.417.  Caviar, with a sodium count of 1500 is above one standard deviation from the mean sodium count.
+
+### Creating Basic Plots
+
+```{r}
+plot(USDA$Protein, USDA$TotalFat)
+```
+
+Let's pretty this up a little bit.
+
+```{r}
+plot(USDA$Protein, USDA$TotalFat, xlab="Protein", ylab="Fat", main="Protein vs Fat", col="red")
+```
+
+```{r}
+hist(USDA$VitaminC, xlab="Vitamin C (mg)", main="Histogram of Vitamin C Levels")
+```
+
+Hm...Let's change the x-axis, add more breaks and adjust the bin size.
+
+```{r}
+hist(USDA$VitaminC, xlab="Vitamin C (mg)", 
+     main="Histogram of Vitamin C Levels", 
+     xlim=(c(0, 100)),
+     breaks=2000)
+```
+
+```{r}
+boxplot(USDA$Sugar, main="Boxplot of Sugar Levels", ylab="Sugar (g)")
+```
+
+### Adding Variables to a Data Frame
+
+```{r}
+USDA$Sodium[1] > mean(USDA$Sodium, na.rm=TRUE)
+USDA$Sodium[50] > mean(USDA$Sodium, na.rm=TRUE)
+
+HighSodium = USDA$Sodium > mean(USDA$Sodium, na.rm=TRUE)
+str(HighSodium)
+```
+
+We can change the data type to numeric instead of logical.
+
+```{r}
+HighSodium = as.numeric(HighSodium)
+str(HighSodium)
+```
+
+Now we can add HighSodium to the dataframe.
+```{r}
+USDA$HighSodium = HighSodium
+```
+
+Let's add HighFat, High Protein and HighSugar to the dataframe.
+
+```{r}
+USDA$HighProtein = as.numeric(USDA$Protein > mean(USDA$Protein, 
+                                                  na.rm=TRUE))
+USDA$HighFat = as.numeric(USDA$TotalFat > mean(USDA$TotalFat, 
+                                               na.rm=TRUE))
+USDA$HighSugar = as.numeric(USDA$Sugar > mean(USDA$Sugar, 
+                                              na.rm=TRUE))
+```
+
+### Summary Tables
+
+```{r}
+table(USDA$HighSodium)
+```
+
+This explains that 4884 foods have less sodium that the mean sodium level and 2090 foods have above average sodium levels.
+
+```{r}
+table(USDA$HighSodium, USDA$HighFat)
+```
+
+The rows correspond to the first input High Sodium and the columns correspond to the second input, High Fat.
+
+So we have 3529 low sodium, low fat foods; 1355 low sodium, high fat foods; 1378 low fat, high sodium foods and 712 high sodium, high fat foods.
+
+***
+
+### Using tapply
+
+```{r}
+tapply(USDA$Iron, USDA$HighProtein, mean, na.rm=TRUE)
+```
+
+Here we group the first parameter by the second parameter and then apply the third parameter to the new grouping.
+
+So we have mean iron counts of 2.55 in low protein foods and 3.197 in high protein foods.
+
+```{r}
+tapply(USDA$VitaminC, USDA$HighSugar, max, na.rm=TRUE)
+```
+
+Here we group the Vitamin C variable by whether or not it is high sugar, then we find the max of each group.
+
+```{r}
+tapply(USDA$VitaminC, USDA$HighSugar, summary, na.rm=TRUE)
+```
+
+This shows us the summary of the Vitamin C level of the two groups.
+
+
+
+
+
+
+
+
+
